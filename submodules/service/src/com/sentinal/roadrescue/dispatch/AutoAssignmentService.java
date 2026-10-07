@@ -20,7 +20,7 @@ public class AutoAssignmentService
 {
 	private static final Object ASSIGNMENT_LOCK = new Object();
 
-	private static final long OFFER_TIMEOUT_MS = readLongEnvironment("ROAD_RESCUE_ASSIGNMENT_TIMEOUT_MS", 30_000L);
+	private static final long OFFER_TIMEOUT_MS = readLongEnvironment("ROAD_RESCUE_ASSIGNMENT_TIMEOUT_MS", 120_000L);
 
 	private static final double MAX_RADIUS_KM = readDoubleEnvironment("ROAD_RESCUE_ASSIGNMENT_RADIUS_KM", 25.0);
 

@@ -65,20 +65,28 @@ public class PersistenceInitializer
 			);
 		}
 
-		PersistenceManager.initialize(
-			getRequiredProperty(
-				properties,
-				"url"
-			),
-			getRequiredProperty(
-				properties,
-				"username"
-			),
-			getRequiredProperty(
-				properties,
-				"password"
-			)
-		);
+		String url = System.getenv("DB_URL");
+
+		if (url == null || url.isBlank())
+		{
+			url = properties.getProperty("url");
+		}
+
+		String username = System.getenv("DB_USERNAME");
+
+		if (username == null || username.isBlank())
+		{
+			username = properties.getProperty("username");
+		}
+
+		String password = System.getenv("DB_PASSWORD");
+
+		if (password == null)
+		{
+			password = properties.getProperty("password", "");
+		}
+
+		PersistenceManager.initialize(url, username, password);
 	}
 
 	private static Properties loadProperties(

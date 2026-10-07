@@ -39,7 +39,7 @@ public final class DispatchScheduler
 			{
 				throwable.printStackTrace();
 			}
-		}, 5, 5, TimeUnit.SECONDS);
+		}, 0, 5, TimeUnit.HOURS);
 	}
 
 	public static synchronized void stop()
