@@ -1,0 +1,13 @@
+{
+  "rest_fw_deps": {
+    "src": "../rest_fw/build/libs/rest_fw-1.0-SNAPSHOT.jar"
+  },
+
+  "persistence_fw_deps": {
+    "src": "../persistence_fw/build/libs/persistence_fw-1.0-SNAPSHOT.jar"
+  },
+
+  "security_fw_deps": {
+    "src": "../security_fw/build/libs/security_fw-1.0.0.jar"
+  }
+}

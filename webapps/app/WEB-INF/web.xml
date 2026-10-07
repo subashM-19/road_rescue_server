@@ -1,0 +1,60 @@
+<web-app>
+    xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+    http://xmlns.jcp.org/xml/ns/javaee
+    http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+    version="4.0">
+
+    <listener>
+        <listener-class>
+            com.sentinal.restfw.api.rest.RestFrameworkListener
+        </listener-class>
+    </listener>
+
+    <listener>
+        <listener-class>
+            com.sentinal.app.bootstrap.ApplicationInitializer
+        </listener-class>
+    </listener>
+
+    <listener>
+        <listener-class>
+            com.sentinal.roadrescue.security.RoadRescueSecurityInitializer
+        </listener-class>
+    </listener>
+
+    <listener>
+        <listener-class>
+            com.sentinal.roadrescue.jobs.BackgroundJobInitializer
+        </listener-class>
+    </listener>
+
+    <filter>
+        <filter-name>SecurityFilter</filter-name>
+
+        <filter-class>
+            com.sentinal.securityfw.SecurityFilter
+        </filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>SecurityFilter</filter-name>
+
+        <url-pattern>/api/*</url-pattern>
+    </filter-mapping>
+
+    <servlet>
+        <servlet-name>rest</servlet-name>
+        <servlet-class>
+            com.sentinal.restfw.api.rest.RestAPIServlet
+        </servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>rest</servlet-name>
+        <url-pattern>/api/*</url-pattern>
+    </servlet-mapping>
+
+</web-app>

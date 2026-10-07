@@ -1,0 +1,140 @@
+<Requests>
+    <Request uri="/mechanics/nearby"
+             bean="com.sentinal.roadrescue.mechanic.MechanicAPI"
+             method="getNearbyMechanics">
+
+        <Parameter name="latitude" source="request" type="double"/>
+        <Parameter name="longitude" source="request" type="double"/>
+        <Parameter name="vehicle_type" source="request" type="string"/>
+        <Parameter name="service_type" source="request" type="string"/>
+    </Request>
+
+    <Request uri="/service-requests/([0-9]+)"
+             bean="com.sentinal.roadrescue.service.ServiceRequestAPI"
+             method="getServiceRequest">
+
+    <Parameter name="service_request_id" source="regex" type="long" value="1"/>
+    </Request>
+
+    <Request
+            uri="/admin/mechanic-shops"
+            bean="com.sentinal.roadrescue.admin.MechanicShopAPI"
+            method="getMechanicShops">
+    </Request>
+
+    <Request
+            uri="/admin/mechanic-shops/([0-9]+)"
+            bean="com.sentinal.roadrescue.admin.MechanicShopAPI"
+            method="getMechanicShop">
+
+        <Parameter name="mechanic_shop_id" source="regex" type="long" value="1"/>
+    </Request>
+
+    <Request
+            uri="/admin/mechanics"
+            bean="com.sentinal.roadrescue.admin.MechanicAdminAPI"
+            method="getMechanics">
+    </Request>
+
+    <Request
+            uri="/admin/service-requests"
+            bean="com.sentinal.roadrescue.admin.ServiceRequestAdminAPI"
+            method="getServiceRequests">
+    </Request>
+
+    <Request
+            uri="/admin/users"
+            bean="com.sentinal.roadrescue.admin.UserAdminAPI"
+            method="getUsers">
+    </Request>
+
+
+
+    <Request
+            uri="/mechanics/([0-9]+)/shop"
+            bean="com.sentinal.roadrescue.mechanic.MechanicShopManagementAPI"
+            method="getMyShop">
+
+        <Parameter name="mechanic_id" source="regex" type="long" value="1"/>
+    </Request>
+
+
+    <Request
+            uri="/mechanics/([0-9]+)/shop/mechanics"
+            bean="com.sentinal.roadrescue.mechanic.MechanicShopManagementAPI"
+            method="getShopMechanics">
+
+        <Parameter name="mechanic_id" source="regex" type="long" value="1"/>
+    </Request>
+
+    <!-- =====================================================
+     MECHANIC APPLICATION
+     ===================================================== -->
+
+    <Request uri="/mechanic/application"
+             bean="com.sentinal.roadrescue.mechanic.MechanicApplicationAPI"
+             method="getMyApplication">
+    </Request>
+
+
+    <!-- =====================================================
+         ADMIN MECHANIC APPLICATIONS
+         ===================================================== -->
+
+    <Request uri="/admin/mechanic-applications"
+             bean="com.sentinal.roadrescue.mechanic.MechanicApplicationAPI"
+             method="getApplications">
+    </Request>
+
+
+    <Request uri="/admin/mechanic-applications/([0-9]+)"
+             bean="com.sentinal.roadrescue.mechanic.MechanicApplicationAPI"
+             method="getApplication">
+
+        <Parameter name="application_id"
+                   source="regex"
+                   type="long"
+                   value="1"/>
+
+    </Request>
+
+    <!-- =====================================================
+         NOTIFICATIONS
+         ===================================================== -->
+
+    <Request uri="/notifications"
+             bean="com.sentinal.roadrescue.notification.NotificationAPI"
+             method="getNotifications">
+    </Request>
+
+    <Request uri="/me"
+             bean="com.sentinal.roadrescue.common.CurrentUserAPI"
+             method="getCurrentUser">
+    </Request>
+
+    <Request
+            uri="/mechanic/assignments"
+            bean="com.sentinal.roadrescue.mechanic.MechanicAssignmentAPI"
+            method="getMyAssignments">
+    </Request>
+
+    <Request
+            uri="/service-requests/([0-9]+)/tracking"
+            bean="com.sentinal.roadrescue.service.ServiceRequestAPI"
+            method="getTracking">
+
+        <Parameter
+                name="service_request_id"
+                source="regex"
+                type="long"
+                value="1"/>
+
+    </Request>
+
+    <Request
+            uri="/service-requests"
+            bean="com.sentinal.roadrescue.service.ServiceRequestAPI"
+            method="getMyServiceRequests">
+    </Request>
+
+</Requests>

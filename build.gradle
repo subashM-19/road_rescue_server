@@ -1,0 +1,775 @@
+import groovy.json.JsonSlurper
+
+plugins {
+    id 'java'
+}
+
+group = 'com.sentinal.app'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+
+// =========================================================
+// DEPENDENCIES
+// =========================================================
+
+def depsFile = file('deps/deps.json')
+
+if (!depsFile.exists()) {
+    throw new GradleException(
+            "Dependency configuration not found: ${depsFile.absolutePath}"
+    )
+}
+
+def depsConfig =
+        new JsonSlurper().parse(depsFile)
+
+if (depsConfig.rest_fw_deps == null ||
+        depsConfig.rest_fw_deps.src == null) {
+    throw new GradleException(
+            "rest_fw_deps.src is missing in deps/deps.json"
+    )
+}
+
+if (depsConfig.persistence_fw_deps == null ||
+        depsConfig.persistence_fw_deps.src == null) {
+    throw new GradleException(
+            "persistence_fw_deps.src is missing in deps/deps.json"
+    )
+}
+
+if (depsConfig.security_fw_deps == null ||
+        depsConfig.security_fw_deps.src == null) {
+    throw new GradleException(
+            "security_fw_deps.src is missing in deps/deps.json"
+    )
+}
+
+def restFwJar =
+        file(depsConfig.rest_fw_deps.src)
+
+def persistenceFwJar =
+        file(depsConfig.persistence_fw_deps.src)
+
+def securityFwJar =
+        file(depsConfig.security_fw_deps.src)
+
+println ""
+println "=============================================="
+println "Framework dependencies"
+println "=============================================="
+
+println "REST FW:"
+println restFwJar.absolutePath
+println "Exists: ${restFwJar.exists()}"
+
+println ""
+
+println "PERSISTENCE FW:"
+println persistenceFwJar.absolutePath
+println "Exists: ${persistenceFwJar.exists()}"
+
+println ""
+
+println "SECURITY FW:"
+println securityFwJar.absolutePath
+println "Exists: ${securityFwJar.exists()}"
+
+println ""
+
+if (!restFwJar.exists()) {
+    throw new GradleException(
+            "REST framework JAR not found: ${restFwJar.absolutePath}"
+    )
+}
+
+if (!persistenceFwJar.exists()) {
+    throw new GradleException(
+            "Persistence framework JAR not found: ${persistenceFwJar.absolutePath}"
+    )
+}
+
+if (!securityFwJar.exists())
+{
+    throw new GradleException(
+            "security framework JAR not found: ${securityFwJar.absolutePath}"
+    )
+}
+
+
+dependencies {
+    implementation files(restFwJar)
+    implementation files(persistenceFwJar)
+    implementation files(securityFwJar)
+
+    // Servlet API is provided by Tomcat at runtime
+    compileOnly 'javax.servlet:javax.servlet-api:4.0.1'
+
+    // MySQL driver
+    implementation 'com.mysql:mysql-connector-j:8.4.0'
+
+    // JSON
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
+
+    implementation 'com.auth0:java-jwt:4.6.1'
+    implementation 'com.auth0:jwks-rsa:0.24.1'
+
+    compileOnly 'javax.websocket:javax.websocket-api:1.1'
+
+    // Tests
+    testImplementation platform('org.junit:junit-bom:6.0.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+
+// =========================================================
+// SOURCE SETS
+//
+// Application infrastructure:
+//     src/com/sentinal/app/...
+//
+// Business modules:
+//     submodules/employee/src
+//     submodules/payroll/src
+//     ...
+// =========================================================
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+
+            def submodulesDir =
+                    file('submodules')
+
+            if (submodulesDir.exists()) {
+                submodulesDir
+                        .listFiles()
+                        .findAll {
+                            it.isDirectory()
+                        }
+                        .collect {
+                            new File(it, 'src')
+                        }
+                        .findAll {
+                            it.exists()
+                        }
+                        .each {
+                            srcDir it
+                        }
+            }
+        }
+    }
+}
+
+
+// =========================================================
+// FINAL BUILD DIRECTORY
+//
+// Project/
+// ├── workspace/
+// │   ├── road_rescue_server/
+// │   ├── rest_fw/
+// │   └── persistence_fw/
+// │
+// ├── apache-tomcat-9.0.118/
+// │
+// └── build/
+//     └── road_rescue_server/
+// =========================================================
+
+def finalBuildDir =
+        file('../../build/road_rescue_server')
+
+def appDir =
+        file('../../build/road_rescue_server/webapps/app')
+
+def appWebInfDir =
+        file('../../build/road_rescue_server/webapps/app/WEB-INF')
+
+def appClassesDir =
+        file('../../build/road_rescue_server/webapps/app/WEB-INF/classes')
+
+def appLibDir =
+        file('../../build/road_rescue_server/webapps/app/WEB-INF/lib')
+
+def tomcatDir =
+        file('../../apache-tomcat-9.0.118')
+
+
+// =========================================================
+// PREPARE APPLICATION
+// =========================================================
+
+tasks.register('prepareApplication') {
+    dependsOn classes
+
+    doLast {
+        println ""
+        println "=============================================="
+        println "Preparing application distribution"
+        println "=============================================="
+        println ""
+
+
+        // =================================================
+        // Validate Tomcat
+        // =================================================
+
+        if (!tomcatDir.exists()) {
+            throw new GradleException(
+                    "Tomcat directory not found: "
+                            + tomcatDir.absolutePath
+            )
+        }
+
+
+        // =================================================
+        // Remove previous final build
+        // =================================================
+
+        if (finalBuildDir.exists()) {
+            println "Removing previous application build..."
+
+            delete finalBuildDir
+        }
+
+
+        // =================================================
+        // Create required directories
+        // =================================================
+
+        appClassesDir.mkdirs()
+        appLibDir.mkdirs()
+
+
+        // =================================================
+        // Copy Tomcat
+        // =================================================
+
+        println "Copying Tomcat..."
+
+        copy {
+            from tomcatDir
+            into finalBuildDir
+        }
+
+
+        // =================================================
+        // Copy compiled Java classes
+        //
+        // Gradle now compiles:
+        //
+        // src/
+        // submodules/employee/src/
+        // submodules/payroll/src/
+        // ...
+        //
+        // into:
+        //
+        // build/classes/java/main
+        //
+        // Then copies them into:
+        //
+        // WEB-INF/classes
+        // =================================================
+
+        def compiledClassesDir =
+                layout.buildDirectory
+                        .dir("classes/java/main")
+                        .get()
+                        .asFile
+
+        println ""
+        println "Compiled classes directory:"
+        println compiledClassesDir.absolutePath
+
+        if (!compiledClassesDir.exists()) {
+            throw new GradleException(
+                    "Compiled classes directory does not exist: "
+                            + compiledClassesDir.absolutePath
+            )
+        }
+
+        println "Copying compiled classes..."
+
+        copy {
+            from compiledClassesDir
+            into appClassesDir
+        }
+
+
+        // =================================================
+        // Copy application resources
+        // =================================================
+
+        def resourcesDir =
+                layout.buildDirectory
+                        .dir("resources/main")
+                        .get()
+                        .asFile
+
+        if (resourcesDir.exists()) {
+            println "Copying application resources..."
+
+            copy {
+                from resourcesDir
+                into appClassesDir
+            }
+        }
+
+
+        // =================================================
+        // Copy runtime dependencies
+        //
+        // Includes:
+        //
+        // rest_fw-1.0-SNAPSHOT.jar
+        // persistence_fw-1.0-SNAPSHOT.jar
+        // mysql-connector-j
+        // jackson
+        // ...
+        //
+        // Servlet API is compileOnly and therefore is NOT
+        // copied because Tomcat already provides it.
+        //
+        // Goes into:
+        //
+        // WEB-INF/lib
+        // =================================================
+
+        println ""
+        println "Copying application libraries..."
+
+        configurations.runtimeClasspath
+                .findAll {
+                    it.isFile()
+                }
+                .each { dependencyFile ->
+
+                    println "  ${dependencyFile.name}"
+
+                    copy {
+                        from dependencyFile
+                        into appLibDir
+                    }
+                }
+
+
+        // =================================================
+        // Copy submodule webapps
+        //
+        // Example:
+        //
+        // submodules/employee/webapps/*
+        // submodules/payroll/webapps/*
+        //
+        // goes into:
+        //
+        // webapps/app/
+        // =================================================
+
+        println ""
+        println "Copying submodule web resources..."
+
+        def submodulesDir =
+                file('submodules')
+
+        if (submodulesDir.exists()) {
+            fileTree('submodules') {
+                include '**/webapps/**'
+            }.files.each { sourceFile ->
+
+                def relativePath =
+                        sourceFile
+                                .absolutePath
+                                .substring(
+                                        submodulesDir
+                                                .absolutePath
+                                                .length()
+                                )
+
+                def targetFile =
+                        new File(
+                                appDir,
+                                relativePath
+                                        .replace(
+                                                File.separator,
+                                                "/"
+                                        )
+                                        .replaceFirst(
+                                                '^/',
+                                                ''
+                                        )
+                        )
+
+                if (sourceFile.isFile()) {
+                    copy {
+                        from sourceFile
+                        into targetFile.parentFile
+                    }
+                }
+            }
+        }
+
+
+        // =================================================
+        // Copy top-level application webapps/app
+        // =================================================
+
+        def sourceWebAppDir =
+                file('webapps/app')
+
+        if (sourceWebAppDir.exists()) {
+            println ""
+            println "Copying application webapps/app..."
+
+            copy {
+                from sourceWebAppDir
+                into appDir
+
+                exclude 'WEB-INF/classes/**'
+                exclude 'WEB-INF/lib/**'
+            }
+        }
+
+
+        // =================================================
+        // Copy product_package
+        //
+        // Source:
+        //
+        // road_rescue_server/product_package
+        //
+        // Destination:
+        //
+        // build/road_rescue_server/webapps/app/product_package
+        // =================================================
+
+        def productPackageDir =
+                file('product_package')
+
+        if (productPackageDir.exists()) {
+            println ""
+            println "Copying product_package..."
+
+            copy {
+                from productPackageDir
+
+                into new File(
+                        appDir,
+                        'product_package'
+                )
+            }
+        }
+
+
+        // =================================================
+        // Create run.sh
+        // =================================================
+
+        def runScript =
+                new File(
+                        finalBuildDir,
+                        'sentinal/bin/run.sh'
+                )
+
+        runScript.parentFile.mkdirs()
+
+        runScript.text = '''#!/bin/bash
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+APP_HOME="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+export CATALINA_HOME="$APP_HOME"
+export CATALINA_BASE="$APP_HOME"
+
+if [ "$1" = "debug" ]; then
+
+    export CATALINA_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
+
+    echo ""
+    echo "=============================================="
+    echo "Starting application in DEBUG mode"
+    echo "Debug port : 5005"
+    echo "Waiting for IntelliJ debugger..."
+    echo "=============================================="
+    echo ""
+
+    "$CATALINA_HOME/bin/catalina.sh" run
+
+else
+
+    echo ""
+    echo "=============================================="
+    echo "Starting application"
+    echo "=============================================="
+    echo ""
+
+    "$CATALINA_HOME/bin/catalina.sh" run
+
+fi
+'''
+
+        runScript.setExecutable(true)
+
+
+        // =================================================
+        // Validate important application classes
+        // =================================================
+
+        println ""
+        println "=============================================="
+        println "Validating application classes"
+        println "=============================================="
+
+        def requiredClasses = [
+                new File(
+                        appClassesDir,
+                        'com/sentinal/app/bootstrap/ApplicationInitializer.class'
+                ),
+                new File(
+                        appClassesDir,
+                        'com/sentinal/app/persistence/PersistenceInitializer.class'
+                ),
+                new File(
+                        appClassesDir,
+                        'com/sentinal/app/persistence/SchemaXMLParser.class'
+                )
+        ]
+
+        requiredClasses.each { classFile ->
+            if (!classFile.exists()) {
+                throw new GradleException(
+                        "Required application class was not compiled: "
+                                + classFile.absolutePath
+                )
+            }
+
+            println "FOUND: ${classFile.name}"
+        }
+
+
+        // =================================================
+        // Validate framework JARs in final application
+        // =================================================
+
+        println ""
+        println "=============================================="
+        println "Validating framework libraries"
+        println "=============================================="
+
+        def finalRestFwJar =
+                new File(
+                        appLibDir,
+                        restFwJar.name
+                )
+
+        def finalPersistenceFwJar =
+                new File(
+                        appLibDir,
+                        persistenceFwJar.name
+                )
+
+        if (!finalRestFwJar.exists()) {
+            throw new GradleException(
+                    "REST framework JAR was not copied into WEB-INF/lib"
+            )
+        }
+
+        if (!finalPersistenceFwJar.exists()) {
+            throw new GradleException(
+                    "Persistence framework JAR was not copied into WEB-INF/lib"
+            )
+        }
+
+        println "FOUND: ${finalRestFwJar.name}"
+        println "FOUND: ${finalPersistenceFwJar.name}"
+
+
+        // =================================================
+        // Validate persistence configuration
+        // =================================================
+
+        def finalSchemaFile =
+                new File(
+                        appDir,
+                        'product_package/conf/app/persistence/schema.xml'
+                )
+
+        def finalDatabasePropertiesFile =
+                new File(
+                        appDir,
+                        'product_package/conf/app/persistence/database.properties'
+                )
+
+        if (!finalSchemaFile.exists()) {
+            throw new GradleException(
+                    "Persistence schema not found in final application: "
+                            + finalSchemaFile.absolutePath
+            )
+        }
+
+        if (!finalDatabasePropertiesFile.exists()) {
+            throw new GradleException(
+                    "Database configuration not found in final application: "
+                            + finalDatabasePropertiesFile.absolutePath
+            )
+        }
+
+        println ""
+        println "FOUND: schema.xml"
+        println "FOUND: database.properties"
+
+
+        // =================================================
+        // Print compiled classes
+        // =================================================
+
+        println ""
+        println "=============================================="
+        println "Compiled classes in final application"
+        println "=============================================="
+
+        fileTree(appClassesDir)
+                .matching {
+                    include '**/*.class'
+                }
+                .each {
+                    println it
+                }
+
+
+        // =================================================
+        // Final information
+        // =================================================
+
+        println ""
+        println "=============================================="
+        println "APPLICATION BUILD COMPLETED"
+        println "=============================================="
+        println ""
+
+        println "Application:"
+        println appDir.absolutePath
+
+        println ""
+        println "Normal startup:"
+        println "cd ${finalBuildDir}/sentinal/bin"
+        println "./run.sh"
+
+        println ""
+        println "Debug startup:"
+        println "cd ${finalBuildDir}/sentinal/bin"
+        println "./run.sh debug"
+
+        println ""
+        println "Debug port:"
+        println "5005"
+
+        println ""
+    }
+}
+
+def appServerDir = file("../../build/road_rescue_server")
+
+def getConfigValue = { String environmentName, String propertyName ->
+    def environmentValue = System.getenv(environmentName)
+
+    if (environmentValue != null && !environmentValue.trim().isEmpty()) {
+        return environmentValue
+    }
+
+    if (project.hasProperty(propertyName)) {
+        def propertyValue = project.property(propertyName).toString()
+
+        if (!propertyValue.trim().isEmpty()) {
+            return propertyValue
+        }
+    }
+
+    throw new GradleException(
+            "Missing configuration: ${environmentName} " +
+                    "or Gradle property ${propertyName}"
+    )
+}
+
+tasks.register("generateServerEnvironment") {
+    doLast {
+        def binDir = new File(appServerDir, "bin")
+
+        if (!binDir.exists()) {
+            binDir.mkdirs()
+        }
+
+        def auth0Domain = getConfigValue(
+                "AUTH0_DOMAIN",
+                "auth0Domain"
+        )
+
+        def auth0Audience = getConfigValue(
+                "AUTH0_AUDIENCE",
+                "auth0Audience"
+        )
+
+        def adminEmail = getConfigValue(
+                "ROAD_RESCUE_ADMIN_EMAIL",
+                "roadRescueAdminEmail"
+        )
+
+        def setenvFile = new File(
+                binDir,
+                "setenv.sh"
+        )
+
+        def objectStorageDir =
+                project.hasProperty("roadRescueObjectStorageDir")
+                        ? project.property("roadRescueObjectStorageDir").toString()
+                        : new File(appServerDir, "storage").absolutePath
+
+        setenvFile.text = """#!/bin/sh
+
+        export AUTH0_DOMAIN="${auth0Domain}"
+        export AUTH0_AUDIENCE="${auth0Audience}"
+        export ROAD_RESCUE_ADMIN_EMAIL="${adminEmail}"
+        export ROAD_RESCUE_OBJECT_STORAGE_DIR="${objectStorageDir}"
+        """
+
+        setenvFile.setExecutable(true)
+
+        println(
+                "Generated Tomcat environment file: " +
+                        setenvFile.absolutePath
+        )
+    }
+}
+
+
+// =========================================================
+// BUILD
+// =========================================================
+
+tasks.named('build') {
+    finalizedBy(
+            tasks.named('prepareApplication')
+    )
+}
+
+tasks.named('prepareApplication') {
+    finalizedBy(
+            tasks.named('generateServerEnvironment')
+    )
+}
+
+
+// =========================================================
+// TEST
+// =========================================================
+
+test {
+    useJUnitPlatform()
+}

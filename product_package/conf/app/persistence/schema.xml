@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Schema>
+
+    <Table name="Users">
+        <Column name="UserID" jdbcType="BIGINT" nullable="false" autoIncrement="true" primaryKey="true" unique="true"/>
+        <Column name="Name" jdbcType="VARCHAR" size="255" nullable="false"/>
+        <Column name="Email" jdbcType="VARCHAR" size="255" nullable="false" unique="true"/>
+        <Column name="Phone" jdbcType="VARCHAR" size="20" nullable="false"/>
+        <Column name="UserType" jdbcType="INTEGER" nullable="false" defaultValue="1"/>
+        <Column name="Status" jdbcType="INTEGER" nullable="false" defaultValue="1"/>
+        <Column name="LastModifiedTime" jdbcType="BIGINT" nullable="false" lastModifiedTime="true"/>
+    </Table>
+
+    <Table name="Vehicle">
+        <Column name="VehicleID" jdbcType="BIGINT" nullable="false" autoIncrement="true" primaryKey="true" unique="true"/>
+        <Column name="UserID" jdbcType="BIGINT" nullable="false" referencedTable="Users" referencedColumn="UserID"/>
+        <Column name="RegistrationNumber" jdbcType="VARCHAR" size="50" nullable="false" unique="true"/>
+        <Column name="Manufacturer" jdbcType="VARCHAR" size="100" nullable="false"/>
+        <Column name="Model" jdbcType="VARCHAR" size="100" nullable="false"/>
+        <Column name="FuelType" jdbcType="VARCHAR" size="30"/>
+        <Column name="Status" jdbcType="INTEGER" nullable="false" defaultValue="1"/>
+        <Column name="LastModifiedTime" jdbcType="BIGINT" nullable="false" lastModifiedTime="true"/>
+    </Table>
+
+    <Table name="Mechanic">
+        <Column name="MechanicID" jdbcType="BIGINT" nullable="false" autoIncrement="true" primaryKey="true" unique="true"/>
+        <Column name="UserID" jdbcType="BIGINT" nullable="false" referencedTable="Users" referencedColumn="UserID"/>
+        <Column name="MechanicShopID" jdbcType="BIGINT" nullable= "true" referencedTable="MechanicShop" referencedColumn="MechanicShopID"/>
+        <Column name="AvailabilityStatus" jdbcType="INTEGER" nullable="false"/>
+        <Column name="Latitude" jdbcType="DECIMAL" size="10"/>
+        <Column name="Longitude" jdbcType="DECIMAL" size="10"/>
+        <Column name="LocationUpdatedTime" jdbcType="BIGINT"/>
+        <Column name="LastModifiedTime" jdbcType="BIGINT" nullable="false" lastModifiedTime="true"/>
+    </Table>
+
+    <Table name="ServiceRequest">
+        <Column name="ServiceRequestID" jdbcType="BIGINT" nullable="false" autoIncrement="true" primaryKey="true" unique="true"/>
+        <Column name="UserID" jdbcType="BIGINT" nullable="false" referencedTable="Users" referencedColumn="UserID"/>
+        <Column name="VehicleType" jdbcType="INTEGER" nullable="false"/>
+        <Column name="ServiceType" jdbcType="INTEGER" nullable="false"/>
+        <Column name="Description" jdbcType="VARCHAR" size="1000"/>
+        <Column name="Latitude" jdbcType="DECIMAL" size="10" nullable="false"/>
+        <Column name="Longitude" jdbcType="DECIMAL" size="10" nullable="false"/>
+        <Column name="Status" jdbcType="INTEGER" nullable="false"/>
+        <Column name="CreatedTime" jdbcType="BIGINT" nullable="false"/>
+        <Column name="LastModifiedTime" jdbcType="BIGINT" nullable="false" lastModifiedTime="true"/>
+    </Table>
+
+    <Table name="MechanicService">
+        <Column name="MechanicServiceID" jdbcType="BIGINT" nullable="false" autoIncrement="true" primaryKey="true" unique="true"/>
+        <Column name="MechanicID" jdbcType="BIGINT" nullable="false" referencedTable="Mechanic" referencedColumn="MechanicID"/>
+        <Column name="VehicleType" jdbcType="INTEGER" nullable="false"/>
+        <Column name="ServiceType" jdbcType="INTEGER" nullable="false"/>
+        <Column name="Status" jdbcType="INTEGER" nullable="false" defaultValue="1"/>
+        <Column name="LastModifiedTime" jdbcType="BIGINT" nullable="false" lastModifiedTime="true"/>
+    </Table>
+
+    <Table name="MechanicAssignment">
+        <Column name="MechanicAssignmentID" jdbcType="BIGINT" nullable="false" autoIncrement="true" primaryKey="true" unique="true"/>
+        <Column name="ServiceRequestID" jdbcType="BIGINT" nullable="false" referencedTable="ServiceRequest" referencedColumn="ServiceRequestID"/>
+        <Column name="MechanicID" jdbcType="BIGINT" nullable="false" referencedTable="Mechanic" referencedColumn="MechanicID"/>
+        <Column name="Status" jdbcType="INTEGER" nullable="false"/>
+        <Column name="AssignedTime" jdbcType="BIGINT" nullable="false"/>
+        <Column name="ExpiresTime" jdbcType="BIGINT"/>
+        <Column name="AcceptedTime" jdbcType="BIGINT"/>
+        <Column name="CompletedTime" jdbcType="BIGINT"/>
+        <Column name="LastModifiedTime" jdbcType="BIGINT" nullable="false" lastModifiedTime="true"/>
+    </Table>
+
+    <Table name="MechanicShop">
+        <Column name="MechanicShopID" jdbcType="BIGINT" nullable="false" autoIncrement="true" primaryKey="true" unique="true"/>
+        <Column name="Name" jdbcType="VARCHAR" size="255" nullable="false"/>
+        <Column name="Address" jdbcType="VARCHAR" size="500"/>
+        <Column name="Latitude" jdbcType="DECIMAL" size="10" nullable="false"/>
+        <Column name="Longitude" jdbcType="DECIMAL" size="10" nullable="false"/>
+        <Column name="Phone" jdbcType="VARCHAR" size="20"/>
+        <Column name="Status" jdbcType="INTEGER" nullable="false" defaultValue="1"/>
+        <Column name="LastModifiedTime" jdbcType="BIGINT" nullable="false" lastModifiedTime="true"/>
+    </Table>
+
+    <Table name="UserIdentity">
+        <Column name="UserIdentityID" jdbcType="BIGINT" nullable="false" autoIncrement="true" primaryKey="true" unique="true"/>
+        <Column name="UserID" jdbcType="BIGINT" nullable="false" referencedTable="Users" referencedColumn="UserID"/>
+        <Column name="Provider" jdbcType="VARCHAR" size="50" nullable="false"/>
+        <Column name="ExternalSubject" jdbcType="VARCHAR" size="255" nullable="false" unique="true"/>
+        <Column name="LastModifiedTime" jdbcType="BIGINT" nullable="false" lastModifiedTime="true"/>
+    </Table>
+
+    <Table name="MechanicApplication">
+        <Column name="MechanicApplicationID" jdbcType="BIGINT" nullable="false"
+                autoIncrement="true"
+                primaryKey="true"
+                unique="true"/>
+
+        <Column name="UserID"
+                jdbcType="BIGINT"
+                nullable="false"
+                unique="true"
+                referencedTable="Users"
+                referencedColumn="UserID"/>
+
+        <Column name="Status"
+                jdbcType="INTEGER"
+                nullable="false"/>
+
+        <Column name="ExperienceYears"
+                jdbcType="INTEGER"/>
+
+        <Column name="Address"
+                jdbcType="VARCHAR"
+                size="500"/>
+
+        <Column name="City"
+                jdbcType="VARCHAR"
+                size="150"/>
+
+        <Column name="State"
+                jdbcType="VARCHAR"
+                size="150"/>
+
+        <Column name="PostalCode"
+                jdbcType="VARCHAR"
+                size="30"/>
+
+        <Column name="SubmittedTime"
+                jdbcType="BIGINT"/>
+
+        <Column name="ReviewedTime"
+                jdbcType="BIGINT"/>
+
+        <Column name="ReviewedBy"
+                jdbcType="BIGINT"
+                referencedTable="Users"
+                referencedColumn="UserID"/>
+
+        <Column name="RejectionReason"
+                jdbcType="VARCHAR"
+                size="1000"/>
+
+        <Column name="LastModifiedTime"
+                jdbcType="BIGINT"
+                nullable="false"
+                lastModifiedTime="true"/>
+    </Table>
+
+    <Table name="MechanicDocument">
+        <Column name="MechanicDocumentID"
+                jdbcType="BIGINT"
+                nullable="false"
+                autoIncrement="true"
+                primaryKey="true"
+                unique="true"/>
+
+        <Column name="MechanicApplicationID"
+                jdbcType="BIGINT"
+                nullable="false"
+                referencedTable="MechanicApplication"
+                referencedColumn="MechanicApplicationID"/>
+
+        <Column name="ObjectKey"
+                jdbcType="VARCHAR"
+                size="500"
+                nullable="false"/>
+
+        <Column name="OriginalFileName"
+                jdbcType="VARCHAR"
+                size="255"
+                nullable="false"/>
+
+        <Column name="ContentType"
+                jdbcType="VARCHAR"
+                size="100"/>
+
+        <Column name="SizeBytes"
+                jdbcType="BIGINT"/>
+
+        <Column name="LastModifiedTime"
+                jdbcType="BIGINT"
+                nullable="false"
+                lastModifiedTime="true"/>
+    </Table>
+
+    <Table name="Notification">
+        <Column name="NotificationID"
+                jdbcType="BIGINT"
+                nullable="false"
+                autoIncrement="true"
+                primaryKey="true"
+                unique="true"/>
+
+        <Column name="UserID"
+                jdbcType="BIGINT"
+                nullable="false"
+                referencedTable="Users"
+                referencedColumn="UserID"/>
+
+        <Column name="NotificationType"
+                jdbcType="INTEGER"
+                nullable="false"/>
+
+        <Column name="Title"
+                jdbcType="VARCHAR"
+                size="255"
+                nullable="false"/>
+
+        <Column name="Message"
+                jdbcType="VARCHAR"
+                size="1000"
+                nullable="false"/>
+
+        <Column name="Status"
+                jdbcType="INTEGER"
+                nullable="false"/>
+
+        <Column name="CreatedTime"
+                jdbcType="BIGINT"
+                nullable="false"/>
+
+        <Column name="ReadTime"
+                jdbcType="BIGINT"/>
+
+        <Column name="LastModifiedTime"
+                jdbcType="BIGINT"
+                nullable="false"
+                lastModifiedTime="true"/>
+    </Table>
+
+    <Table name="BackgroundJob">
+        <Column name="BackgroundJobID"
+                jdbcType="BIGINT"
+                nullable="false"
+                autoIncrement="true"
+                primaryKey="true"
+                unique="true"/>
+
+        <Column name="JobName"
+                jdbcType="VARCHAR"
+                size="150"
+                nullable="false"/>
+
+        <Column name="Payload"
+                jdbcType="VARCHAR"
+                size="2000"/>
+
+        <Column name="Status"
+                jdbcType="INTEGER"
+                nullable="false"/>
+
+        <Column name="AttemptCount"
+                jdbcType="INTEGER"
+                nullable="false"
+                defaultValue="0"/>
+
+        <Column name="CreatedTime"
+                jdbcType="BIGINT"
+                nullable="false"/>
+
+        <Column name="StartedTime"
+                jdbcType="BIGINT"/>
+
+        <Column name="CompletedTime"
+                jdbcType="BIGINT"/>
+
+        <Column name="ErrorMessage"
+                jdbcType="VARCHAR"
+                size="2000"/>
+
+        <Column name="LastModifiedTime"
+                jdbcType="BIGINT"
+                nullable="false"
+                lastModifiedTime="true"/>
+    </Table>
+
+</Schema>

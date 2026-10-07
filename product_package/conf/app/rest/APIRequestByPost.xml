@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Requests>
+
+    <Request uri="/service-requests"
+             bean="com.sentinal.roadrescue.service.ServiceRequestAPIHandler">
+
+        <Parameter name="vehicle_type" source="body" type="string"/>
+        <Parameter name="service_type" source="body" type="string"/>
+        <Parameter name="description" source="body" type="string"/>
+        <Parameter name="latitude" source="body" type="double"/>
+        <Parameter name="longitude" source="body" type="double"/>
+
+    </Request>
+
+    <Request
+            uri="/mechanic/availability"
+            bean="com.sentinal.roadrescue.mechanic.MechanicAPIHandler">
+
+        <Parameter name="status" source="body" type="string"/>
+
+    </Request>
+
+    <Request uri="/mechanic/assignments/([0-9]+)/accept"
+             bean="com.sentinal.roadrescue.mechanic.MechanicAssignmentAPI"
+             method="acceptAssignment">
+
+        <Parameter name="mechanic_assignment_id" source="regex" type="long" value="1"/>
+
+    </Request>
+
+    <Request uri="/mechanic/assignments/([0-9]+)/reject"
+             bean="com.sentinal.roadrescue.mechanic.MechanicAssignmentAPI"
+             method="rejectAssignment">
+
+        <Parameter name="mechanic_assignment_id" source="regex" type="long" value="1"/>
+
+    </Request>
+
+    <Request uri="/mechanic/assignments/([0-9]+)/start-journey"
+             bean="com.sentinal.roadrescue.mechanic.MechanicAssignmentAPI"
+             method="startJourney">
+
+        <Parameter name="mechanic_assignment_id" source="regex" type="long" value="1"/>
+
+    </Request>
+
+    <Request uri="/mechanic/assignments/([0-9]+)/start-service"
+             bean="com.sentinal.roadrescue.mechanic.MechanicAssignmentAPI"
+             method="startService">
+
+        <Parameter name="mechanic_assignment_id" source="regex" type="long" value="1"/>
+
+    </Request>
+
+    <Request uri="/mechanic/assignments/([0-9]+)/complete"
+             bean="com.sentinal.roadrescue.mechanic.MechanicAssignmentAPI"
+             method="completeAssignment">
+
+        <Parameter name="mechanic_assignment_id" source="regex" type="long" value="1"/>
+
+    </Request>
+
+
+    <Request uri="/mechanic/application/create"
+             bean="com.sentinal.roadrescue.mechanic.MechanicAPIHandler">
+
+        <Parameter name="experience_years" source="body" type="int"/>
+        <Parameter name="address" source="body" type="string"/>
+        <Parameter name="city" source="body" type="string"/>
+        <Parameter name="state" source="body" type="string"/>
+        <Parameter name="postal_code" source="body" type="string"/>
+
+    </Request>
+
+
+    <Request uri="/mechanic/application/submit"
+             bean="com.sentinal.roadrescue.mechanic.MechanicApplicationAPI"
+             method="submitApplication">
+    </Request>
+
+
+    <Request uri="/admin/mechanic-applications/([0-9]+)/approve"
+             bean="com.sentinal.roadrescue.mechanic.MechanicApplicationAPI"
+             method="approveApplication">
+
+        <Parameter name="application_id"
+                   source="regex"
+                   type="long"
+                   value="1"/>
+
+    </Request>
+
+
+    <Request uri="/admin/mechanic-applications/([0-9]+)/reject"
+             bean="com.sentinal.roadrescue.mechanic.MechanicAPIHandler">
+
+        <Parameter name="application_id" source="regex" type="long" value="1"/>
+
+        <Parameter name="rejection_reason" source="body" type="string"/>
+
+    </Request>
+
+    <Request uri="/notifications/([0-9]+)/read"
+             bean="com.sentinal.roadrescue.notification.NotificationAPI"
+             method="markAsRead">
+
+        <Parameter name="notification_id"
+                   source="regex"
+                   type="long"
+                   value="1"/>
+
+    </Request>
+
+    <Request
+            uri="/ws-ticket"
+            bean="com.sentinal.roadrescue.realtime.WebSocketTicketAPI"
+            method="createTicket">
+    </Request>
+
+</Requests>
