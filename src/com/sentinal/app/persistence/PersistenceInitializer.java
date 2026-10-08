@@ -1,6 +1,7 @@
 package com.sentinal.app.persistence;
 
 import com.sentinal.persistencefw.PersistenceManager;
+import com.sentinal.persistencefw.transaction.TransactionManager;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -86,6 +87,12 @@ public class PersistenceInitializer
 			password = properties.getProperty("password", "");
 		}
 
+		String timeout = System.getenv("ROAD_RESCUE_TRANSACTION_TIMEOUT_SECONDS");
+		if (timeout == null || timeout.isBlank())
+		{
+			timeout = properties.getProperty("transaction.timeout.seconds", "30");
+		}
+		TransactionManager.setDefaultTimeoutSeconds(Integer.parseInt(timeout.trim()));
 		PersistenceManager.initialize(url, username, password);
 	}
 

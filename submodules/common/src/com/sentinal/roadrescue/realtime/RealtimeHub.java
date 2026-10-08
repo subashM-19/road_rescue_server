@@ -1,6 +1,7 @@
 package com.sentinal.roadrescue.realtime;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sentinal.persistencefw.transaction.TransactionManager;
 
 import javax.websocket.Session;
 
@@ -49,14 +50,18 @@ public final class RealtimeHub
 	{
 		Set<Session> sessions = REQUEST_SESSIONS.get(serviceRequestID);
 
-		broadcast(sessions, message);
+		Runnable publish = () -> broadcast(sessions, message);
+		if (TransactionManager.isActive()) TransactionManager.afterCommit(publish);
+		else publish.run();
 	}
 
 	public static void broadcastUser(long userID, Map<String, Object> message)
 	{
 		Set<Session> sessions = USER_SESSIONS.get(userID);
 
-		broadcast(sessions, message);
+		Runnable publish = () -> broadcast(sessions, message);
+		if (TransactionManager.isActive()) TransactionManager.afterCommit(publish);
+		else publish.run();
 	}
 
 	public static void send(Session session, Map<String, Object> message)

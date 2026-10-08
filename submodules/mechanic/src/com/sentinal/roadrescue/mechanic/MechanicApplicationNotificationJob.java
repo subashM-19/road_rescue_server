@@ -8,6 +8,7 @@ import com.sentinal.persistencefw.Row;
 import com.sentinal.roadrescue.jobs.BackgroundJob;
 import com.sentinal.roadrescue.notification.EmailManager;
 import com.sentinal.roadrescue.notification.NotificationService;
+import com.sentinal.roadrescue.notification.NotificationWriterOperations;
 import com.sentinal.roadrescue.notification.NotificationType;
 
 public class MechanicApplicationNotificationJob implements BackgroundJob
@@ -70,7 +71,7 @@ public class MechanicApplicationNotificationJob implements BackgroundJob
 
 	private void processApproval(String name, String email) throws Exception
 	{
-		NotificationService notificationService = new NotificationService();
+		NotificationWriterOperations notificationService = NotificationService.getNotificationWriterImpl();
 
 		notificationService.create(userID, NotificationType.MECHANIC_APPLICATION_APPROVED, "Mechanic application approved", "Your RoadRescue mechanic application has been approved.");
 
@@ -93,7 +94,7 @@ public class MechanicApplicationNotificationJob implements BackgroundJob
 			message += " Reason: " + rejectionReason.trim();
 		}
 
-		NotificationService notificationService = new NotificationService();
+		NotificationWriterOperations notificationService = NotificationService.getNotificationWriterImpl();
 
 		notificationService.create(userID, NotificationType.MECHANIC_APPLICATION_REJECTED, "Mechanic application update", message);
 

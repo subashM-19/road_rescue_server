@@ -27,7 +27,7 @@ public final class DispatchScheduler
 			return thread;
 		});
 
-		AutoAssignmentService service = new AutoAssignmentService();
+		AutoAssignmentOperations service = AutoAssignmentService.getAutoAssignmentImpl();
 
 		scheduler.scheduleWithFixedDelay(() -> {
 			try

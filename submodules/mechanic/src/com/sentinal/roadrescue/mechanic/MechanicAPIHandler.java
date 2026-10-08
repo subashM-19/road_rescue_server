@@ -25,7 +25,7 @@ public class MechanicAPIHandler extends APIHandler
 			String state = jsonNode.get("state").toString();
 			String postalCode = jsonNode.get("postal_code").toString();
 
-			return MechanicApplicationAPI.createApplication(years, address, city, state, postalCode);
+			return MechanicApplicationAPI.getMechanicImpl().createApplication(years, address, city, state, postalCode);
 		}
 		else if (requestUri.contains("/mechanic/availability"))
 		{
@@ -48,7 +48,7 @@ public class MechanicAPIHandler extends APIHandler
 				longitude = jsonNode.get("longitude").asDouble();
 			}
 
-			return new MechanicAvailabilityAPI().updateAvailability(status, latitude, longitude);
+			return MechanicAvailabilityAPI.getMechanicAvailabilityImpl().updateAvailability(status, latitude, longitude);
 		}
 		else if (requestUri.contains("/admin/mechanic-applications") && requestUri.contains("reject"))
 		{
@@ -58,7 +58,7 @@ public class MechanicAPIHandler extends APIHandler
 
 			String reason = jsonNode.get("rejection_reason").toString();
 			long applicationID = (long) restAPIContext.getArguments()[0];
-			return new MechanicApplicationAPI().rejectApplication(applicationID, reason);
+			return MechanicApplicationAPI.getMechanicImpl().rejectApplication(applicationID, reason);
 		}
 		return null;
 	}

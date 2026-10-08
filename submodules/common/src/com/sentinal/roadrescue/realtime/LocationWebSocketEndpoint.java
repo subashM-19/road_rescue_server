@@ -28,7 +28,7 @@ import java.util.Set;
 
 	private static final long MIN_LOCATION_INTERVAL_MS = 1_000L;
 
-	private final TrackingService trackingService = new TrackingService();
+	private final TrackingOperations trackingService = TrackingService.getTrackingImpl();
 
 	@OnOpen public void onOpen(Session session) throws Exception
 	{
@@ -135,7 +135,7 @@ import java.util.Set;
 
 		validateLocation(latitude, longitude);
 
-		Row mechanic = new MechanicIdentityService().getMechanicByUserID(userID);
+		Row mechanic = MechanicIdentityService.getMechanicIdentityImpl().getMechanicByUserID(userID);
 
 		mechanic.set("Latitude", latitude);
 

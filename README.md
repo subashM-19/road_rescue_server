@@ -1843,3 +1843,13 @@ road_rescue_admin_ui
 RoadRescue Server is under active development as a Phase-1 real-time roadside assistance backend and full-stack engineering project.
 
 ---
+
+## Business transactions
+
+Each database-backed API is a facade over a business interface and implementation. Its getter returns one cached `TransactionProxy` instance; for example, `MechanicApplicationAPI.getMechanicImpl().createApplication(...)` invokes `MechanicApplicationOperations` implemented by `MechanicApplicationImpl`. REST bean names and public API methods stay the same, and each facade method delegates to its proxy. Handlers and collaborating services also use the proxy getters. Health and WebSocket ticket issuance do not need a database transaction.
+
+All interface business methods run in a transaction without annotations. The owning method commits on successful completion and rolls back on failure or timeout. Nested proxies and persistence calls share the current connection and deadline. Configure `ROAD_RESCUE_TRANSACTION_TIMEOUT_SECONDS` or `transaction.timeout.seconds` in database.properties once at startup (default 30 seconds, positive integer). Timeout checks are cooperative; Java processing is not forcibly interrupted.
+
+Background job attempts also use an interface proxy. Job submission and realtime broadcasts wait for commit; job tracking updates remain outside the attempt transaction so failures can be recorded. Call the facade or proxy getter when using a service; constructing an implementation directly bypasses transaction interception. Optional annotations support propagation, isolation and read-only overrides.
+
+For the external-framework server, rebuild `../persistence_fw` with `./gradlew jar` before compiling the application. The combined server contains the matching persistence sources. Run `./gradlew test` to verify the integration.

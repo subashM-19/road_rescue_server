@@ -25,7 +25,7 @@ public class ServiceRequestAPIHandler extends APIHandler
 			double latitude = jsonNode.get("latitude").asDouble();
 			double longitude = jsonNode.get("longitude").asDouble();
 
-			return new ServiceRequestAPI().createServiceRequest(vehicleType, serviceType, description, latitude, longitude);
+			return ServiceRequestAPI.getServiceRequestImpl().createServiceRequest(vehicleType, serviceType, description, latitude, longitude);
 		}
 		return null;
 	}

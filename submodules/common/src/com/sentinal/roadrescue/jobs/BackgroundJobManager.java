@@ -9,6 +9,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.sentinal.persistencefw.PersistenceManager;
 import com.sentinal.persistencefw.PersistenceObject;
 import com.sentinal.persistencefw.Row;
+import com.sentinal.persistencefw.transaction.TransactionManager;
+import com.sentinal.persistencefw.transaction.TransactionProxy;
 
 public final class BackgroundJobManager
 {
@@ -58,7 +60,9 @@ public final class BackgroundJobManager
 			throw new IllegalStateException("Background job manager is shutting down");
 		}
 
-		EXECUTOR.submit(() -> executeJob(job, trackingRow));
+		Runnable submit = () -> EXECUTOR.submit(() -> executeJob(job, trackingRow));
+		if (TransactionManager.isActive()) TransactionManager.afterCommit(submit);
+		else submit.run();
 	}
 
 	/*
@@ -126,7 +130,7 @@ public final class BackgroundJobManager
 			{
 				markRunning(trackingRow, attempt);
 
-				job.execute();
+				TransactionProxy.create(BackgroundJob.class, job).execute();
 
 				markCompleted(trackingRow);
 

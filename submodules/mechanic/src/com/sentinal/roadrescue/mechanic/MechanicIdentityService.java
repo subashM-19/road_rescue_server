@@ -1,47 +1,44 @@
 package com.sentinal.roadrescue.mechanic;
 
-import com.sentinal.persistencefw.Criteria;
-import com.sentinal.persistencefw.PersistenceManager;
-import com.sentinal.persistencefw.PersistenceObject;
-import com.sentinal.persistencefw.PersistenceQuery;
 import com.sentinal.persistencefw.Row;
 
-import com.sentinal.roadrescue.security.RoadRescueSecurityContext;
+import com.sentinal.persistencefw.transaction.TransactionProxy;
 
+/** REST facade delegating business work to an interface transaction proxy. */
 public class MechanicIdentityService
 {
+	private static final class Holder
+	{
+		private static final MechanicIdentityOperations INSTANCE = TransactionProxy.create(MechanicIdentityOperations.class, new MechanicIdentityImpl());
+	}
+
+	public static MechanicIdentityOperations getMechanicIdentityImpl()
+	{
+		return Holder.INSTANCE;
+	}
+
 	public long getCurrentMechanicID()
 	{
-		return getMechanicID(RoadRescueSecurityContext.getUserID());
+		return getMechanicIdentityImpl().getCurrentMechanicID();
 	}
 
 	public long getMechanicID(long userID)
 	{
-		Row mechanic = getMechanicByUserID(userID);
-
-		return ((Number) mechanic.get("MechanicID")).longValue();
+		return getMechanicIdentityImpl().getMechanicID(userID);
 	}
 
 	public Row getCurrentMechanic()
 	{
-		return getMechanicByUserID(RoadRescueSecurityContext.getUserID());
+		return getMechanicIdentityImpl().getCurrentMechanic();
 	}
 
 	public Row getMechanicByUserID(long userID)
 	{
-		PersistenceQuery query = new PersistenceQuery("Mechanic").where(new Criteria("Mechanic.UserID", Criteria.EQUAL, userID));
-
-		PersistenceObject dataObject = PersistenceManager.get(query);
-
-		return dataObject.getRows("Mechanic").stream().findFirst().orElseThrow(() -> new IllegalStateException("Mechanic account not found"));
+		return getMechanicIdentityImpl().getMechanicByUserID(userID);
 	}
 
 	public Row getMechanic(long mechanicID)
 	{
-		PersistenceQuery query = new PersistenceQuery("Mechanic").where(new Criteria("Mechanic.MechanicID", Criteria.EQUAL, mechanicID));
-
-		PersistenceObject dataObject = PersistenceManager.get(query);
-
-		return dataObject.getRows("Mechanic").stream().findFirst().orElseThrow(() -> new IllegalArgumentException("Mechanic not found: " + mechanicID));
+		return getMechanicIdentityImpl().getMechanic(mechanicID);
 	}
 }

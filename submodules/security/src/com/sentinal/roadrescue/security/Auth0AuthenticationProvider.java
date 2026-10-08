@@ -27,7 +27,7 @@ public class Auth0AuthenticationProvider implements AuthenticationProvider
 
 	private final JwkProvider jwkProvider;
 
-	private final UserIdentityService userIdentityService;
+	private final UserIdentityOperations userIdentityService;
 
 	public Auth0AuthenticationProvider(String domain, String audience)
 	{
@@ -49,7 +49,7 @@ public class Auth0AuthenticationProvider implements AuthenticationProvider
 
 		this.jwkProvider = new JwkProviderBuilder(normalizedDomain).cached(10, 24, TimeUnit.HOURS).rateLimited(10, 1, TimeUnit.MINUTES).build();
 
-		this.userIdentityService = new UserIdentityService();
+		this.userIdentityService = UserIdentityService.getUserIdentityImpl();
 	}
 
 	@Override public SecurityContext authenticate(HttpServletRequest request)
