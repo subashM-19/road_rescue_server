@@ -13,7 +13,7 @@ public class MechanicAvailabilityAPI
 {
 	private final MechanicIdentityService mechanicIdentityService = new MechanicIdentityService();
 
-	public Map<String, Object> updateAvailability(String status)
+	public Map<String, Object> updateAvailability(String status, Double latitude, Double longitude)
 	{
 		MechanicAvailabilityStatus requested = MechanicAvailabilityStatus.fromNodeRepresentation(status);
 
@@ -29,6 +29,30 @@ public class MechanicAvailabilityAPI
 		if (requested == MechanicAvailabilityStatus.OFFLINE && hasActiveAssignment(mechanicID))
 		{
 			throw new IllegalStateException("Cannot go offline while an assignment is active");
+		}
+
+		if (requested == MechanicAvailabilityStatus.AVAILABLE)
+		{
+			if (latitude == null || longitude == null)
+			{
+				throw new IllegalArgumentException("Current location is required to go online");
+			}
+
+			if (latitude < -90.0 || latitude > 90.0)
+			{
+				throw new IllegalArgumentException("Invalid latitude");
+			}
+
+			if (longitude < -180.0 || longitude > 180.0)
+			{
+				throw new IllegalArgumentException("Invalid longitude");
+			}
+
+			mechanic.set("Latitude", latitude);
+
+			mechanic.set("Longitude", longitude);
+
+			mechanic.set("LocationUpdatedTime", System.currentTimeMillis());
 		}
 
 		mechanic.set("AvailabilityStatus", requested.getCode());

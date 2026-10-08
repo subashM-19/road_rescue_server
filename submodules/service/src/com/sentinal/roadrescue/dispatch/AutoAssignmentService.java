@@ -1,6 +1,7 @@
 package com.sentinal.roadrescue.dispatch;
 
 import com.sentinal.persistencefw.Criteria;
+import com.sentinal.persistencefw.Join;
 import com.sentinal.persistencefw.PersistenceManager;
 import com.sentinal.persistencefw.PersistenceObject;
 import com.sentinal.persistencefw.PersistenceQuery;
@@ -23,6 +24,8 @@ public class AutoAssignmentService
 	private static final long OFFER_TIMEOUT_MS = readLongEnvironment("ROAD_RESCUE_ASSIGNMENT_TIMEOUT_MS", 120_000L);
 
 	private static final double MAX_RADIUS_KM = readDoubleEnvironment("ROAD_RESCUE_ASSIGNMENT_RADIUS_KM", 25.0);
+
+	private static final long REQUEST_TIMEOUT_MS = Long.parseLong(System.getenv().getOrDefault("ROAD_RESCUE_REQUEST_TIMEOUT_MS", "1800000"));
 
 	public Long autoAssign(long serviceRequestID)
 	{
@@ -343,5 +346,101 @@ public class AutoAssignmentService
 				System.err.println("[DISPATCH] Failed to assign request " + serviceRequestID + ": " + exception.getMessage());
 			}
 		}
+	}
+
+	public void cancelStaleServiceRequests()
+	{
+		long cutoffTime = System.currentTimeMillis() - REQUEST_TIMEOUT_MS;
+
+		PersistenceQuery query = new PersistenceQuery("ServiceRequest")
+			.join(Join.LEFT, "MechanicAssignment", "ServiceRequest", "ServiceRequestID", "MechanicAssignment", "ServiceRequestID")
+			.where(new Criteria("ServiceRequest.Status", Criteria.EQUAL, ServiceRequestStatus.PENDING.getCode()));
+
+		PersistenceObject persistenceObject = PersistenceManager.get(query);
+
+		if (persistenceObject == null)
+		{
+			return;
+		}
+
+		List<Row> serviceRequestRows = persistenceObject.getRows("ServiceRequest");
+
+		List<Row> assignmentRows = persistenceObject.getRows("MechanicAssignment");
+
+		if (serviceRequestRows == null || serviceRequestRows.isEmpty())
+		{
+			return;
+		}
+
+
+		Set<Long> staleRequestIDs = new HashSet<>();
+		for (Row serviceRequestRow : serviceRequestRows)
+		{
+			long serviceRequestID = ((Number) serviceRequestRow.get("ServiceRequestID")).longValue();
+
+			if (staleRequestIDs.contains(serviceRequestID))
+			{
+				continue;
+			}
+
+			Object createdTimeValue = serviceRequestRow.get("CreatedTime");
+
+			if (!(createdTimeValue instanceof Number))
+			{
+				continue;
+			}
+
+			long createdTime = ((Number) createdTimeValue).longValue();
+
+			if (createdTime > cutoffTime)
+			{
+				continue;
+			}
+
+			staleRequestIDs.add(serviceRequestID);
+
+			serviceRequestRow.set("Status", ServiceRequestStatus.CANCELLED.getCode());
+
+			persistenceObject.updateRow(serviceRequestRow);
+		}
+
+		if (assignmentRows != null && !assignmentRows.isEmpty())
+		{
+			for (Row assignmentRow : assignmentRows)
+			{
+				Object requestIDValue = assignmentRow.get("ServiceRequestID");
+
+				Object statusValue = assignmentRow.get("Status");
+
+				if (!(requestIDValue instanceof Number) || !(statusValue instanceof Number))
+				{
+					continue;
+				}
+
+				long serviceRequestID = ((Number) requestIDValue).longValue();
+
+				if (!staleRequestIDs.contains(serviceRequestID))
+				{
+					continue;
+				}
+
+				int assignmentStatus = ((Number) statusValue).intValue();
+
+				if (assignmentStatus != MechanicAssignmentStatus.PENDING.getCode())
+				{
+					continue;
+				}
+
+				assignmentRow.set("Status", MechanicAssignmentStatus.CANCELLED.getCode());
+
+				persistenceObject.updateRow(assignmentRow);
+			}
+		}
+
+		if (staleRequestIDs.isEmpty())
+		{
+			return;
+		}
+		PersistenceManager.update(persistenceObject);
 	}
 }

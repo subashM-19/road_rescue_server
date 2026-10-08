@@ -88,12 +88,11 @@ public class Auth0AuthenticationProvider implements AuthenticationProvider
 
 			return buildSecurityContext(verifiedJWT);
 		}
-		catch (AuthenticationException e)
-		{
-			throw e;
-		}
 		catch (Exception e)
 		{
+			System.err.println("JWT verification failed: " + e.getClass().getName() + ": " + e.getMessage());
+
+			e.printStackTrace();
 			throw new AuthenticationException("Invalid access token", e);
 		}
 	}

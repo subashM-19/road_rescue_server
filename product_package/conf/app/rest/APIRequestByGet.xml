@@ -137,4 +137,10 @@
             method="getMyServiceRequests">
     </Request>
 
+    <Request
+            uri="/health"
+            bean="com.sentinal.roadrescue.common.HealthAPI"
+            method="health">
+    </Request>
+
 </Requests>

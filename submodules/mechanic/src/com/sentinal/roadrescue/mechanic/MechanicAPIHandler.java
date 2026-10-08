@@ -8,8 +8,7 @@ import com.sentinal.restfw.api.rest.RestAPIUtil;
 
 public class MechanicAPIHandler extends APIHandler
 {
-	@Override
-	public Object handlePreProcess(RestAPIContext restAPIContext) throws Exception
+	@Override public Object handlePreProcess(RestAPIContext restAPIContext) throws Exception
 	{
 		String requestUri = restAPIContext.getRequestURI();
 		int requestType = restAPIContext.getRequestType();
@@ -35,7 +34,21 @@ public class MechanicAPIHandler extends APIHandler
 			JsonNode jsonNode = objectMapper.readTree(jsonString);
 
 			String status = jsonNode.get("status").asText();
-			return new MechanicAvailabilityAPI().updateAvailability(status);
+
+			Double latitude = null;
+			Double longitude = null;
+
+			if (jsonNode.has("latitude") && !jsonNode.get("latitude").isNull())
+			{
+				latitude = jsonNode.get("latitude").asDouble();
+			}
+
+			if (jsonNode.has("longitude") && !jsonNode.get("longitude").isNull())
+			{
+				longitude = jsonNode.get("longitude").asDouble();
+			}
+
+			return new MechanicAvailabilityAPI().updateAvailability(status, latitude, longitude);
 		}
 		else if (requestUri.contains("/admin/mechanic-applications") && requestUri.contains("reject"))
 		{

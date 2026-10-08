@@ -33,13 +33,14 @@ public final class DispatchScheduler
 			try
 			{
 				service.expirePendingAssignments();
+				service.cancelStaleServiceRequests();
 				service.assignPendingRequests();
 			}
 			catch (Throwable throwable)
 			{
 				throwable.printStackTrace();
 			}
-		}, 0, 5, TimeUnit.HOURS);
+		}, 0, 5, TimeUnit.MINUTES);
 	}
 
 	public static synchronized void stop()
